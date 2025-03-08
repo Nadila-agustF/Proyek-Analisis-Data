@@ -38,7 +38,7 @@ def create_rfm_df(df):
         "instant_x": "nunique",
         "cnt_x": "sum"
     })
-    rfm_df.columns = ["mnth_xc", "max_order_timestamp", "frequency", "monetary"]
+    rfm_df.columns = ["mnth_x", "max_order_timestamp", "frequency", "monetary"]
     
     rfm_df["max_order_timestamp"] = rfm_df["max_order_timestamp"].dt.date
     recent_date = df["dteday"].dt.date.max()
