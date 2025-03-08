@@ -20,7 +20,7 @@ def create_daily_orders_df(df):
     return daily_orders_df
 
 def create_sum_order_items_df(df):
-    sum_order_items_df = df.groupby("mnth_desc").cnt_x.sum().reset_index()
+    sum_order_items_df = df.groupby("mnth_desc").casual_x.sum().reset_index()
     return sum_order_items_df
 
 def create_byweather_df(df):
@@ -144,22 +144,19 @@ st.subheader('Perbandingan Pengguna Register dan Casual')
 
 fig, ax = plt.subplots(nrows=1, ncols=2, figsize=(35, 15))
  
-colors = ["#90CAF9", "#D3D3D3", "#D3D3D3", "#D3D3D3", "#D3D3D3"]
- 
-sns.barplot(x="cnt_x", y="mnth_desc", data=sum_order_items_df, palette=colors, ax=ax[0])
+sns.barplot(x="casual_x", y="mnth_desc", data=sum_order_items_df, color="#90CAF9", ax=ax[0])
 
 ax[0].set_xlabel("Total Casual")
 ax[0].set_ylabel(None)
-ax[0].set_title("Total Pelanggan Casual per Bulan", fontsize=15)
+ax[0].set_title("Total Pelanggan Casual per Bulan", fontsize=20)
 ax[0].tick_params(axis='y', labelsize=35)
 ax[0].tick_params(axis='x', labelsize=30)
 
-sns.barplot(x="mnth_desc", y=["casual_x", "registered_x"], data=sum_order_items_df, kind="bar", ax=ax[1], color=["#72BCD4", "#FFA07A"])
+sns.barplot(x="mnth_desc", y="registered_x", data=data_df, ax=ax[1], color="#00008B")
 
-ax[1].set_title("Total Pelanggan Casual dan Registered per Bulan", fontsize=15)
+ax[1].set_title("Total Pelanggan Registered per Bulan", fontsize=20)
 ax[1].set_xlabel(None)
 ax[1].set_ylabel(None)
-ax[1].legend(["Casual", "Registered"])
  
 st.pyplot(fig)
 
