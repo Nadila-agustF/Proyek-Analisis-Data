@@ -33,12 +33,12 @@ def create_byweather_df(df):
     return weather_df
 
 def create_rfm_df(df):
-    rfm_df = df.groupby(by="mnth_desc", as_index=False).agg({
+    rfm_df = df.groupby(by="mnth_x", as_index=False).agg({
         "dteday": "max", #mengambil tanggal order terakhir
         "instant_x": "nunique",
         "cnt_x": "sum"
     })
-    rfm_df.columns = ["mnth_desc", "max_order_timestamp", "frequency", "monetary"]
+    rfm_df.columns = ["mnth_xc", "max_order_timestamp", "frequency", "monetary"]
     
     rfm_df["max_order_timestamp"] = rfm_df["max_order_timestamp"].dt.date
     recent_date = df["dteday"].dt.date.max()
