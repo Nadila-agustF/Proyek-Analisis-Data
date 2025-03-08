@@ -176,27 +176,29 @@ with col3:
     avg_frequency = format_currency(rfm_df.monetary.mean(), "AUD", locale='es_CO') 
     st.metric("Average Monetary", value=avg_frequency)
 
-fig, ax = plt.subplots(nrows=1, ncols=3, figsize=(35, 15))
-colors = ["#90CAF9", "#90CAF9", "#90CAF9", "#90CAF9", "#90CAF9"]
+fig, ax = plt.subplots(nrows=1, ncols=3, figsize=(45, 15))
+colors = ["#00BFFF", "#00BFFF", "#00BFFF", "#00BFFF", "#00BFFF", "#00BFFF", "#00BFFF", "#00BFFF","#00BFFF", "#00BFFF","#00BFFF"]
 
 # Grafik Recency
-sns.barplot(x="mnth_desc", y="recency", data=rfm_df, palette="Blues_r", ax=ax[0])
+sns.barplot(x="mnth_x", y="recency", data=rfm_df, palette=colors, ax=ax[0])
 
-ax[0].set_title("Recency Penyewaan per Bulan", fontsize=14)
-ax[0].set_xlabel("Bulan")
-ax[0].set_ylabel("Recency (Hari sejak penyewaan terakhir)")
+ax[0].set_title("Recency Penyewaan per Bulan", fontsize=40)
+ax[0].set_xlabel("Bulan", fontsize=25)
+ax[0].set_ylabel(None)
 
 # Grafik Frequency
-sns.barplot(x="mnth_desc", y="frequency", data=rfm_df, palette="Greens_r", ax=ax[1])
-ax[1].set_title("Frequency Penyewaan per Bulan", fontsize=14)
-ax[1].set_xlabel("Bulan")
-ax[1].set_ylabel("Total Frequency")
+sns.barplot(x="mnth_x", y="frequency", data=rfm_df, palette=colors, ax=ax[1])
+ax[1].set_title("Frequency Penyewaan per Bulan", fontsize=40)
+ax[1].set_xlabel("Bulan", fontsize=25)
+ax[1].set_ylabel(None)
 
 # Grafik Monetary
-sns.barplot(x="mnth_desc", y="monetary", data=rfm_df, palette="Oranges_r", ax=ax[2])
-ax[2].set_title("Monetary Penyewaan per Bulan", fontsize=14)
-ax[2].set_xlabel("Bulan")
-ax[2].set_ylabel("Total Monetary")
+sns.barplot(x="mnth_x", y="monetary", data=rfm_df, palette=colors, ax=ax[2])
+ax[2].set_title("Monetary Penyewaan per Bulan", fontsize=40)
+ax[2].set_xlabel("Bulan", fontsize=25)
+ax[2].set_ylabel(None)
+
+st.pyplot(fig)
 
 for i, col in enumerate(["recency", "frequency", "monetary"]):
     for index, value in enumerate(rfm_df[col]):
