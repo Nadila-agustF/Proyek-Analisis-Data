@@ -19,18 +19,27 @@ def create_daily_orders_df(df):
     
     return daily_orders_df
 
-def create_sum_order_items_df(df):
-    sum_order_items_df = df.groupby("mnth_desc").casual_x.sum().reset_index()
-    return sum_order_items_df
-
 def create_byweather_df(df):
-    weather_df = df.groupby(by="weathersit_desc").instant_x.nunique().reset_index()
+    weather_df = df.groupby(by="weathersit_desc").cnt_y.sum().reset_index()
     weather_df.rename(columns={
-        "instant_x": "customer_count"
+        "cnt_y": "customer_sum"
     }, inplace=True)
-    weather_df['weathersit_desc'] = pd.Categorical(weather_df['weathersit_desc'], ["Clear", "Cloudly", "Light Snow", "Heavy Rain"])
-    
     return weather_df
+
+def create_weekday_df(df):
+    weekday_df = df.groupby("weekday_x").agg({
+        "casual_y": "sum",
+        "registered_y": "sum"
+    }).reset_index()
+    weekday_df.rename(columns={
+        "casual_y" : "casual",
+        "registered_y": "register"
+    }, inplace=True)
+    return weekday_df
+
+def create_byseason_df(df):
+    byseason_df = df.groupby(by="season_desc").cnt_y.sum().reset_index()
+    return byseason_df
 
 def create_rfm_df(df):
     rfm_df = df.groupby(by="mnth_x", as_index=False).agg({
@@ -73,8 +82,9 @@ main_df = data_df[(data_df["dteday"] >= str(start_date)) &
                 (data_df["dteday"] <= str(end_date))]
 
 daily_orders_df = create_daily_orders_df(main_df)
-sum_order_items_df = create_sum_order_items_df(main_df)
 byweather_df = create_byweather_df(main_df)
+weekday_df = create_weekday_df(main_df)
+byseason_df = create_byseason_df(main_df)
 rfm_df = create_rfm_df(main_df)
 
 st.header("Bike Rental Dashboard")
@@ -89,16 +99,21 @@ with col2:
     total_casual = daily_orders_df.sum_customers.sum()
     st.metric("Total Pelanggan", value=total_casual)
 
-fig, ax = plt.subplots(figsize=(16, 8))
-ax.plot(
-    daily_orders_df["dteday"],
-    daily_orders_df["sum_customers"],
-    marker='o', 
-    linewidth=2,
-    color="#90CAF9"
+fig, ax = plt.subplots(figsize=(10, 6))
+st.header("Tren Total Order dan Pelanggan Harian")
+
+sns.lineplot(
+    x="dteday", 
+    y="sum_customers", 
+    data=daily_orders_df, 
+    color="#90CAF9",
+    linewidth=1
 )
-ax.tick_params(axis='y', labelsize=20)
-ax.tick_params(axis='x', labelsize=15)
+
+ax.set_title("Jumlah Pelanggan per Hari", fontsize=14)
+ax.set_xlabel("Tanggal", fontsize=12)
+ax.set_ylabel("Jumlah Pelanggan", fontsize=12)
+ax.tick_params(axis="x", rotation=45) 
 st.pyplot(fig)
 
 st.header("Penyewaan sepeda selama satu tahun")
@@ -109,55 +124,69 @@ month_order = [
 data_df['mnth_desc'] = pd.Categorical(data_df['mnth_desc'], categories=month_order, ordered=True)
 daily_rentals = data_df.groupby('mnth_desc').agg({'cnt_x': 'sum'}).reset_index()
 
-fig1, ax1 = plt.subplots(figsize=(18, 5))
-sns.lineplot(x='mnth_desc', y='cnt_x', data=daily_rentals, ax=ax1, marker='o', color='skyblue')
+fig1, ax1 = plt.subplots(figsize=(18, 7))
+sns.lineplot(x='mnth_desc', y='cnt_x', data=daily_rentals, ax=ax1, marker='o',linewidth=3, color='skyblue')
 
-ax1.set_title('Total Penyewaan Sepeda per Bulan 2012', fontsize=16)
+ax1.set_title('Total Penyewaan Sepeda per Bulan tahun 2012', fontsize=16)
 ax1.set_xlabel(None)
 ax1.set_ylabel('Total Penyewaan', fontsize=12)
 ax1.set_xticks(daily_rentals['mnth_desc'])
-ax1.set_xticklabels(daily_rentals["mnth_desc"])
+ax1.set_xticklabels(daily_rentals["mnth_desc"],fontsize=15)
 ax1.grid(True)
 
 st.pyplot(fig1)
 
 st.subheader("Total Pemakaian Sepeda berdasarkan Cuaca")
 
-fig, ax = plt.subplots(figsize=(20, 10))
+fig, ax = plt.subplots(figsize=(18, 7))
 
-sns.lineplot(
-    x="customer_count", 
-    y="weathersit_desc", 
-    data=byweather_df.sort_values(by="customer_count", ascending=False),
-    marker='o',
+sns.barplot(
+    y="customer_sum", 
+    x="weathersit_desc", 
+    data=byweather_df,
     color='skyblue',
     ax=ax
 )
-ax.set_title("Number of Customer by Weather", loc="center", fontsize=30)
+ax.set_title("Jumlah penyewaan berdasarkan cuaca", loc="center", fontsize=30)
 ax.set_ylabel(None)
 ax.set_xlabel(None)
 ax.tick_params(axis='y', labelsize=20)
-ax.tick_params(axis='x', labelsize=15)
+ax.tick_params(axis='x', labelsize=20)
 st.pyplot(fig)
 
 st.subheader('Perbandingan Pengguna Register dan Casual')
+fig, ax = plt.subplots(figsize=(10, 5))
 
-fig, ax = plt.subplots(nrows=1, ncols=2, figsize=(35, 15))
- 
-sns.barplot(x="casual_x", y="mnth_desc", data=sum_order_items_df, color="#90CAF9", ax=ax[0])
+weekday_df_melted = weekday_df.melt(id_vars=["weekday_x"], 
+                                    value_vars=["casual", "register"],
+                                    var_name="User Type", 
+                                    value_name="Total Users")
 
-ax[0].set_xlabel("Total Casual")
-ax[0].set_ylabel(None)
-ax[0].set_title("Total Pelanggan Casual per Bulan", fontsize=20)
-ax[0].tick_params(axis='y', labelsize=35)
-ax[0].tick_params(axis='x', labelsize=30)
+sns.barplot(x="weekday_x", y="Total Users", hue="User Type", 
+            data=weekday_df_melted, palette=["skyblue", "lightcoral"], ax=ax)
 
-sns.barplot(x="mnth_desc", y="registered_x", data=data_df, ax=ax[1], color="#00008B")
+ax.set_title("Total Pengguna Casual dan Register saat weekday", fontsize=16)
+ax.set_xlabel("Weekday", fontsize=12)
+ax.set_ylabel("Total Users", fontsize=12)
 
-ax[1].set_title("Total Pelanggan Registered per Bulan", fontsize=20)
-ax[1].set_xlabel(None)
-ax[1].set_ylabel(None)
- 
+st.pyplot(fig)
+
+st.subheader("Total Pemakaian Sepeda berdasarkan Musim")
+
+fig, ax = plt.subplots(figsize=(10, 5))
+
+sns.barplot(
+    y="cnt_y", 
+    x="season_desc", 
+    data=byseason_df,
+    color="#00BFFF",
+    ax=ax
+)
+ax.set_title("Jumlah penyewaan sepeda berdasarkan musim", loc="center", fontsize=13)
+ax.set_ylabel(None)
+ax.set_xlabel(None)
+ax.tick_params(axis='y', labelsize=12)
+ax.tick_params(axis='x', labelsize=12)
 st.pyplot(fig)
 
 st.subheader("Best Customer Based on RFM Parameters")
