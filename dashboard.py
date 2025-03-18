@@ -41,21 +41,6 @@ def create_byseason_df(df):
     byseason_df = df.groupby(by="season_desc").cnt_y.sum().reset_index()
     return byseason_df
 
-def create_rfm_df(df):
-    rfm_df = df.groupby(by="mnth_x", as_index=False).agg({
-        "dteday": "max", #mengambil tanggal order terakhir
-        "instant_x": "nunique",
-        "cnt_x": "sum"
-    })
-    rfm_df.columns = ["mnth_x", "max_order_timestamp", "frequency", "monetary"]
-    
-    rfm_df["max_order_timestamp"] = rfm_df["max_order_timestamp"].dt.date
-    recent_date = df["dteday"].dt.date.max()
-    rfm_df["recency"] = rfm_df["max_order_timestamp"].apply(lambda x: (recent_date - x).days) 
-    rfm_df.drop("max_order_timestamp", axis=1, inplace=True)
-    
-    return rfm_df
-
 data_df = pd.read_csv("all_data(1).csv")
 
 datetime_columns = ["dteday"]
@@ -85,7 +70,6 @@ daily_orders_df = create_daily_orders_df(main_df)
 byweather_df = create_byweather_df(main_df)
 weekday_df = create_weekday_df(main_df)
 byseason_df = create_byseason_df(main_df)
-rfm_df = create_rfm_df(main_df)
 
 st.header("Bike Rental Dashboard")
 st.subheader("Summary Metrics")
@@ -188,50 +172,3 @@ ax.set_xlabel(None)
 ax.tick_params(axis='y', labelsize=12)
 ax.tick_params(axis='x', labelsize=12)
 st.pyplot(fig)
-
-st.subheader("Best Customer Based on RFM Parameters")
- 
-col1, col2, col3 = st.columns(3)
- 
-with col1:
-    avg_recency = round(rfm_df.recency.mean(), 1)
-    st.metric("Average Recency (days)", value=avg_recency)
- 
-with col2:
-    avg_frequency = round(rfm_df.frequency.mean(), 2)
-    st.metric("Average Frequency", value=avg_frequency)
- 
-with col3:
-    avg_frequency = format_currency(rfm_df.monetary.mean(), "AUD", locale='es_CO') 
-    st.metric("Average Monetary", value=avg_frequency)
-
-fig, ax = plt.subplots(nrows=1, ncols=3, figsize=(45, 15))
-colors = ["#00BFFF", "#00BFFF", "#00BFFF", "#00BFFF", "#00BFFF", "#00BFFF", "#00BFFF", "#00BFFF","#00BFFF", "#00BFFF","#00BFFF"]
-
-# Grafik Recency
-sns.barplot(x="mnth_x", y="recency", data=rfm_df, palette=colors, ax=ax[0])
-
-ax[0].set_title("Recency Penyewaan per Bulan", fontsize=40)
-ax[0].set_xlabel("Bulan", fontsize=25)
-ax[0].set_ylabel(None)
-
-# Grafik Frequency
-sns.barplot(x="mnth_x", y="frequency", data=rfm_df, palette=colors, ax=ax[1])
-ax[1].set_title("Frequency Penyewaan per Bulan", fontsize=40)
-ax[1].set_xlabel("Bulan", fontsize=25)
-ax[1].set_ylabel(None)
-
-# Grafik Monetary
-sns.barplot(x="mnth_x", y="monetary", data=rfm_df, palette=colors, ax=ax[2])
-ax[2].set_title("Monetary Penyewaan per Bulan", fontsize=40)
-ax[2].set_xlabel("Bulan", fontsize=25)
-ax[2].set_ylabel(None)
-
-st.pyplot(fig)
-
-for i, col in enumerate(["recency", "frequency", "monetary"]):
-    for index, value in enumerate(rfm_df[col]):
-        ax[i].text(index, value + 1, str(value), ha="center", fontsize=12)
-
-plt.tight_layout()
-plt.show()
