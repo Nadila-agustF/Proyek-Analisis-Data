@@ -28,9 +28,10 @@ Proyek ini bertujuan untuk menganalisis dan memvisualisasikan data penyewaan sep
 ### Menjalankan file dashboard
 *streamlit run dasboard.py
 
-Link dashboard : [link](https://dashboard-rental.streamlit.app/)
+Link dashboard : [Streamlit](https://dashboard-rental.streamlit.app/)
 
 ### Struktur Proyek
+
 📦Projek akhir
  ┣ 📂dashboard
  ┃ ┣ 📜all_data(1).csv
